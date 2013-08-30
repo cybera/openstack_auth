@@ -123,9 +123,11 @@ class KeystoneBackend(object):
         self.check_auth_expiry(token)
 
         # If we made it here we succeeded. Create our User!
-        user = create_user_from_token(request,
-                                      token,
-                                      client.service_catalog.url_for())
+        # jt
+        #user = create_user_from_token(request,
+        #                              token,
+        #                              client.service_catalog.url_for())
+	user = create_user_from_token(request, token, auth_url)
 
         if request is not None:
             if is_ans1_token(unscoped_token.id):
