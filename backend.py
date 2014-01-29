@@ -102,6 +102,12 @@ class KeystoneBackend(object):
 
         while tenants:
             tenant = tenants.pop()
+            # Auto assign tenant when admin. Fixed in Havana+ with Keystone V3 API
+            # MJ
+            # Next two lines normally don't exist
+            if username == 'admin':
+              tenant.id = '9a9bdefa46274beeb286c93bd16aaa7b'
+
             try:
                 client = keystone_client.Client(tenant_id=tenant.id,
                                                 token=unscoped_token.id,
