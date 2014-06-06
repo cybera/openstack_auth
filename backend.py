@@ -100,13 +100,22 @@ class KeystoneBackend(object):
             msg = _('You are not authorized for any projects.')
             raise KeystoneAuthException(msg)
 
+        # JT
+        # Sloppy but prevents us from hard-coding the tenant ID.
+        # There's probably a better way to do this.
+        admin_tenant_id = None
+        for tenant in tenants:
+            if tenant.name == 'admin':
+                admin_tenant_id = tenant.id
+
         while tenants:
             tenant = tenants.pop()
-            # Auto assign tenant when admin. Fixed in Havana+ with Keystone V3 API
             # MJ
-            # Next two lines normally don't exist
+            # Auto assign tenant when admin. Fixed in Havana+ with Keystone V3 API
+            # Next three lines normally don't exist
             if username == 'admin':
-              tenant.id = '9a9bdefa46274beeb286c93bd16aaa7b'
+              if admin_tenant_id:
+                  tenant.id = admin_tenant_id
 
             try:
                 client = keystone_client.Client(tenant_id=tenant.id,
