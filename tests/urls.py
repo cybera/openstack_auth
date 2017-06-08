@@ -1,13 +1,30 @@
-from django.conf.urls.defaults import patterns, include, url
-from django.views.generic import TemplateView
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from openstack_auth.utils import patch_middleware_get_user
+from django.conf.urls import include
+from django.conf.urls import patterns
+from django.conf.urls import url
+from django.views import generic
+
+from openstack_auth import utils
 
 
-patch_middleware_get_user()
+utils.patch_middleware_get_user()
 
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     url(r"", include('openstack_auth.urls')),
-    url(r"^$", TemplateView.as_view(template_name="auth/blank.html"))
+    url(r"^websso/$", "openstack_auth.views.websso", name='websso'),
+    url(r"^$", generic.TemplateView.as_view(template_name="auth/blank.html"))
 )
