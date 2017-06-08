@@ -156,28 +156,26 @@ class KeystoneBackend(object):
                     projects.pop(pos)
                     projects.insert(0, project)
                     break
-
-        for project in projects:
-            token = unscoped_auth_ref.auth_token
-            scoped_auth = utils.get_token_auth_plugin(auth_url,
-                                                      token=token,
-                                                      project_id=project.id)
-
         # JT
-        # Sloppy but prevents us from hard-coding the project ID.
+        # Sloppy but prevents us from hard-coding the tenant ID.
         # There's probably a better way to do this.
         admin_project_id = None
         for project in projects:
             if project.name == 'admin':
                 admin_project_id = project.id
 
+	# MJ
+        for project in projects:
+            token = unscoped_auth_ref.auth_token
+            # Auto assign project when admin. Should be fixed when we can migrate to v3 API full time.
+            scoped_auth = utils.get_token_auth_plugin(auth_url,
+                                                      token=token,
+                                                      project_id=project.id)
+            if unscoped_auth_ref['user']['username'] == 'admin' and project.id == admin_project_id:
+                break
+
         while projects:
             project = projects.pop()
-            # MJ
-            # Auto assign project when admin. Should be fixed when we can migrate to v3 API full time.
-            if unscoped_auth_ref['user']['username'] == 'admin':
-              if admin_project_id:
-                  project.id = admin_project_id
 
             try:
                 scoped_auth_ref = scoped_auth.get_access(session)
