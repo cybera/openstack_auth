@@ -164,21 +164,20 @@ class KeystoneBackend(object):
                                                       project_id=project.id)
 
         # JT
-        # Sloppy but prevents us from hard-coding the tenant ID.
+        # Sloppy but prevents us from hard-coding the project ID.
         # There's probably a better way to do this.
-        admin_tenant_id = None
-        for tenant in tenants:
-            if tenant.name == 'admin':
-                admin_tenant_id = tenant.id
+        admin_project_id = None
+        for project in projects:
+            if project.name == 'admin':
+                admin_project_id = project.id
 
-        while tenants:
-            tenant = tenants.pop()
+        while projects:
+            project = projects.pop()
             # MJ
-            # Auto assign tenant when admin. Should have been fixed in Havana+ with Keystone V3 API
-            # Next three lines normally don't exist
-            if username == 'admin':
-              if admin_tenant_id:
-                  tenant.id = admin_tenant_id
+            # Auto assign project when admin. Should be fixed when we can migrate to v3 API full time.
+            if unscoped_auth_ref['user']['username'] == 'admin':
+              if admin_project_id:
+                  project.id = admin_project_id
 
             try:
                 scoped_auth_ref = scoped_auth.get_access(session)
@@ -219,7 +218,7 @@ class KeystoneBackend(object):
             # Support client caching to save on auth calls.
             setattr(request, KEYSTONE_CLIENT_ATTR, scoped_client)
 
-        LOG.debug('Authentication completed for user "%s".' % username)
+        LOG.debug('Authentication completed.")
         return user
 
     def get_group_permissions(self, user, obj=None):
