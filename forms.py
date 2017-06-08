@@ -54,10 +54,12 @@ class Login(django_auth_forms.AuthenticationForm):
         widget=forms.TextInput(attrs={"autofocus": "autofocus"}))
     password = forms.CharField(label=_("Password"),
                                widget=forms.PasswordInput(render_value=False))
+    totptoken = forms.CharField(label=_("Totp Token"), required=False,
+                                widget=forms.TextInput())
 
     def __init__(self, *args, **kwargs):
         super(Login, self).__init__(*args, **kwargs)
-        fields_ordering = ['username', 'password', 'region']
+        fields_ordering = ['username', 'password', 'totptoken', 'region']
         if getattr(settings,
                    'OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT',
                    False):
@@ -66,7 +68,8 @@ class Login(django_auth_forms.AuthenticationForm):
                 required=True,
                 widget=forms.TextInput(attrs={"autofocus": "autofocus"}))
             self.fields['username'].widget = forms.widgets.TextInput()
-            fields_ordering = ['domain', 'username', 'password', 'region']
+            fields_ordering = ['domain', 'username', 'password',
+                               'totptoken', 'region']
         self.fields['region'].choices = self.get_region_choices()
         if len(self.fields['region'].choices) == 1:
             self.fields['region'].initial = self.fields['region'].choices[0][0]
@@ -84,8 +87,7 @@ class Login(django_auth_forms.AuthenticationForm):
                 choices=getattr(settings, 'WEBSSO_CHOICES', ()),
                 required=False,
                 initial=initial)
-            # move auth_type to the top of the list
-            fields_ordering.pop(-1)
+            # add auth_type to the top of the list
             fields_ordering.insert(0, 'auth_type')
 
         # websso is enabled, but keystone version is not supported
@@ -116,10 +118,12 @@ class Login(django_auth_forms.AuthenticationForm):
                                  'Default')
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
+        token = self.cleaned_data.get('totptoken')
         region = self.cleaned_data.get('region')
         domain = self.cleaned_data.get('domain', default_domain)
 
         if not (username and password):
+        #if not (username and password and token):
             # Don't authenticate, just let the other validators handle it.
             return self.cleaned_data
 
@@ -127,6 +131,7 @@ class Login(django_auth_forms.AuthenticationForm):
             self.user_cache = authenticate(request=self.request,
                                            username=username,
                                            password=password,
+                                           totp=token,
                                            user_domain_name=domain,
                                            auth_url=region)
             msg = 'Login successful for user "%(username)s".' % \
@@ -140,3 +145,4 @@ class Login(django_auth_forms.AuthenticationForm):
         if hasattr(self, 'check_for_test_cookie'):  # Dropped in django 1.7
             self.check_for_test_cookie()
         return self.cleaned_data
+
